@@ -1,6 +1,8 @@
 package expense
 
 import (
+	"database/sql"
+
 	_ "github.com/lib/pq"
 )
 
@@ -14,4 +16,12 @@ type Expense struct {
 
 type Error struct {
 	Message string `json:"message"`
+}
+
+type handler struct {
+	DB *sql.DB
+}
+
+func InitHandler(db *sql.DB) *handler {
+	return &handler{db}
 }
