@@ -7,11 +7,12 @@ CREATE TABLE IF NOT EXISTS expenses (
 );
 
 INSERT INTO
-	expenses (title, amount, note, tags)
+	expenses (id, title, amount, note, tags)
 values
 	(
+		2,
 		'Title IT',
 		10.99,
 		'Note IT',
-		'{tagsIT1,tagsIT2}'
+		ARRAY ['tagsIT1', 'tagsIT2']
 	)
