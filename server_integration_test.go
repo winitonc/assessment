@@ -33,6 +33,7 @@ func init() {
 		h := expense.InitHandler(db)
 
 		e.POST("/expenses", h.CreateExpenseHandler)
+		e.PUT("/expenses/:id", h.UpdateExpenseHandler)
 		e.GET("/expenses/:id", h.GetExpensesByIDHandler)
 		e.Start(fmt.Sprintf(":%d", serverPort))
 	}(eh)
@@ -95,7 +96,6 @@ func TestGetExpenseByID(t *testing.T) {
 	reqBody := ``
 	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost:%d/expenses/2", serverPort), strings.NewReader(reqBody))
 	assert.NoError(t, err)
-	//req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 
 	// Act
 	var resp *http.Response
@@ -108,11 +108,46 @@ func TestGetExpenseByID(t *testing.T) {
 	assert.NoError(t, err)
 	resp.Body.Close()
 
-	// Assertions
 	expect := `{"id":2,"title":"Title IT","amount":10.99,"note":"Note IT","tags":["tagsIT1","tagsIT2"]}` + "\n"
 	if assert.NoError(t, err) {
 		assert.Nil(t, err)
 		assert.Equal(t, http.StatusOK, resp.StatusCode)
 		assert.Equal(t, expect, string(byteBody))
+	}
+}
+
+func TestUpdateExpenseAPI(t *testing.T) {
+	// Arrange
+	reqBody := `{
+		"title": "strawberry",
+        "amount": 14.65,
+        "note": "Test update",
+        "tags": [ "tags1" ]
+	}`
+	req, err := http.NewRequest(http.MethodPut, fmt.Sprintf("http://localhost:%d/expenses/1", serverPort), strings.NewReader(reqBody))
+	assert.NoError(t, err)
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+
+	// Act
+	var resp *http.Response
+	client := http.Client{}
+	resp, err = client.Do(req)
+	assert.NoError(t, err)
+
+	var byteBody []byte
+	byteBody, err = io.ReadAll(resp.Body)
+	assert.NoError(t, err)
+	resp.Body.Close()
+
+	var exp expense.Expense
+	err = json.Unmarshal(byteBody, &exp)
+	if assert.NoError(t, err) {
+		assert.Nil(t, err)
+		assert.Equal(t, http.StatusOK, resp.StatusCode)
+		assert.Equal(t, 1, exp.ID)
+		assert.Equal(t, "strawberry", exp.Title)
+		assert.Equal(t, 14.65, exp.Amount)
+		assert.Equal(t, "Test update", exp.Note)
+		assert.Equal(t, []string{"tags1"}, exp.Tags)
 	}
 }
