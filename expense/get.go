@@ -33,3 +33,27 @@ func (h *handler) GetExpensesByIDHandler(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, expense)
 }
+
+func (h *handler) GetExpensesHandler(c echo.Context) error {
+	expenses := []Expense{}
+	stmt, err := h.DB.Prepare("SELECT id, title, amount, note, tags FROM expenses ORDER BY id ASC")
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, Error{Message: err.Error()})
+	}
+
+	rows, err := stmt.Query()
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, Error{Message: err.Error()})
+	}
+
+	for rows.Next() {
+		expense := Expense{}
+		err := rows.Scan(&expense.ID, &expense.Title, &expense.Amount, &expense.Note, pq.Array(&expense.Tags))
+		if err != nil {
+			return c.JSON(http.StatusBadRequest, Error{Message: err.Error()})
+		}
+		expenses = append(expenses, expense)
+	}
+
+	return c.JSON(http.StatusOK, expenses)
+}

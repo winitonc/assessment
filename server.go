@@ -34,6 +34,7 @@ func main() {
 	serv.POST("/expenses", expenseHl.CreateExpenseHandler)
 	serv.PUT("/expenses/:id", expenseHl.UpdateExpenseHandler)
 	serv.GET("/expenses/:id", expenseHl.GetExpensesByIDHandler)
+	serv.GET("/expenses", expenseHl.GetExpensesHandler)
 
 	go func() {
 		if err := serv.Start(":" + os.Getenv("PORT")); err != nil && err != http.ErrServerClosed {

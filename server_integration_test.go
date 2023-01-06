@@ -33,6 +33,7 @@ func init() {
 		h := expense.InitHandler(db)
 
 		e.POST("/expenses", h.CreateExpenseHandler)
+		e.GET("/expenses", h.GetExpensesHandler)
 		e.PUT("/expenses/:id", h.UpdateExpenseHandler)
 		e.GET("/expenses/:id", h.GetExpensesByIDHandler)
 		e.Start(fmt.Sprintf(":%d", serverPort))
@@ -149,5 +150,32 @@ func TestUpdateExpenseAPI(t *testing.T) {
 		assert.Equal(t, 14.65, exp.Amount)
 		assert.Equal(t, "Test update", exp.Note)
 		assert.Equal(t, []string{"tags1"}, exp.Tags)
+	}
+}
+
+func TestGetAllExpensesAPI(t *testing.T) {
+	// Arrange
+	reqBody := ``
+	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost:%d/expenses", serverPort), strings.NewReader(reqBody))
+	assert.NoError(t, err)
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+
+	// Act
+	var resp *http.Response
+	client := http.Client{}
+	resp, err = client.Do(req)
+	assert.NoError(t, err)
+
+	var byteBody []byte
+	byteBody, err = io.ReadAll(resp.Body)
+	assert.NoError(t, err)
+	resp.Body.Close()
+
+	// Assertions
+	expect := `[{"id":1,"title":"strawberry","amount":14.65,"note":"Test update","tags":["tags1"]},{"id":2,"title":"Title IT","amount":10.99,"note":"Note IT","tags":["tagsIT1","tagsIT2"]}]` + "\n"
+	if assert.NoError(t, err) {
+		assert.Equal(t, http.StatusOK, resp.StatusCode)
+		assert.Greater(t, len(byteBody), 0)
+		assert.Equal(t, expect, string(byteBody))
 	}
 }
