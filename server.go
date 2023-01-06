@@ -32,6 +32,8 @@ func main() {
 
 	expenseHl := expense.InitHandler(db)
 	serv.POST("/expenses", expenseHl.CreateExpenseHandler)
+	serv.PUT("/expenses/:id", expenseHl.UpdateExpenseHandler)
+
 	go func() {
 		if err := serv.Start(":" + os.Getenv("PORT")); err != nil && err != http.ErrServerClosed {
 			serv.Logger.Fatal("Shutting down server...")
