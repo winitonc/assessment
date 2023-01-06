@@ -13,6 +13,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	_ "github.com/lib/pq"
+	"github.com/winitonc/assessment/authen"
 	"github.com/winitonc/assessment/expense"
 	"github.com/winitonc/assessment/health"
 )
@@ -25,7 +26,7 @@ func main() {
 	serv := echo.New()
 	serv.Use(middleware.Logger())
 	serv.Use(middleware.Recover())
-	// serv.Use(authen.UserAuth())
+	serv.Use(authen.UserAuth())
 
 	healthHl := health.InitHealthHandler(db)
 	serv.GET("/health", healthHl.GetHealthHandler)
