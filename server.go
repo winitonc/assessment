@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
@@ -20,9 +21,21 @@ import (
 
 func main() {
 	fmt.Println("Stating application... ")
-
 	db := expense.InitDB()
+	server := setupRoute(db)
+	start(server)
+	gracefulShutdown(server, db)
+}
 
+func start(server *echo.Echo) {
+	go func() {
+		if err := server.Start(":" + os.Getenv("PORT")); err != nil && err != http.ErrServerClosed {
+			server.Logger.Fatal("Shutting down server...")
+		}
+	}()
+}
+
+func setupRoute(db *sql.DB) *echo.Echo {
 	serv := echo.New()
 	serv.Use(middleware.Logger())
 	serv.Use(middleware.Recover())
@@ -37,12 +50,10 @@ func main() {
 	serv.GET("/expenses/:id", expenseHl.GetExpensesByIDHandler)
 	serv.GET("/expenses", expenseHl.GetExpensesHandler)
 
-	go func() {
-		if err := serv.Start(":" + os.Getenv("PORT")); err != nil && err != http.ErrServerClosed {
-			serv.Logger.Fatal("Shutting down server...")
-		}
-	}()
+	return serv
+}
 
+func gracefulShutdown(serv *echo.Echo, db *sql.DB) {
 	// Gracefully Shutdown
 	gracefulShutdown := make(chan os.Signal, 1)
 	signal.Notify(gracefulShutdown, os.Interrupt, syscall.SIGTERM)
@@ -62,5 +73,4 @@ func main() {
 	} else {
 		log.Fatal("DB connection gracefully closed")
 	}
-
 }
